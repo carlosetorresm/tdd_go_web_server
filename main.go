@@ -4,18 +4,12 @@ import (
 	"log"
 	"net/http"
 
+	inmemoryserver "github.com/carlosetorresm/tdd_go_web_server/domain/interactions"
 	"github.com/carlosetorresm/tdd_go_web_server/server"
 )
 
-type InMemoryPlayerScore struct{}
-
-func (i *InMemoryPlayerScore) GetPlayersScore(name string) int {
-	return 123
-}
-
-func (i *InMemoryPlayerScore) RecordWin(name string) {}
-
 func main() {
-	server := &server.PlayerServer{Store: &InMemoryPlayerScore{}}
+	store := inmemoryserver.NewInMemoryPlayerStore()
+	server := &server.PlayerServer{Store: store}
 	log.Fatal(http.ListenAndServe(":5000", server))
 }
