@@ -5,12 +5,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	inmemoryserver "github.com/carlosetorresm/tdd_go_web_server/domain/interactions"
+	interations "github.com/carlosetorresm/tdd_go_web_server/domain/interactions"
 	"github.com/carlosetorresm/tdd_go_web_server/server"
 )
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	store := inmemoryserver.NewInMemoryPlayerStore()
+	store := interations.NewInMemoryPlayerStore()
 	server := server.PlayerServer{store}
 	player := "Pepper"
 

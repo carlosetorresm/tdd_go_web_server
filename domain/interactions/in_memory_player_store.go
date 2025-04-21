@@ -1,17 +1,22 @@
-package inmemoryserver
+package interations
+
+import "sync"
 
 func NewInMemoryPlayerStore() *InMemoryPlayerScore {
-	return &InMemoryPlayerScore{map[string]int{}}
+	return &InMemoryPlayerScore{sync.Mutex{}, map[string]int{}}
 }
 
 type InMemoryPlayerScore struct {
-	Store map[string]int
+	mu    sync.Mutex
+	store map[string]int
 }
 
 func (i *InMemoryPlayerScore) GetPlayersScore(name string) int {
-	return i.Store[name]
+	return i.store[name]
 }
 
 func (i *InMemoryPlayerScore) RecordWin(name string) {
-	i.Store[name]++
+	i.mu.Lock()
+	defer i.mu.Unlock()
+	i.store[name]++
 }
