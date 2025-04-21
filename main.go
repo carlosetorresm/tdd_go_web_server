@@ -7,7 +7,13 @@ import (
 	"github.com/carlosetorresm/tdd_go_web_server/server"
 )
 
+type InMemoryPlayerScore struct{}
+
+func (i *InMemoryPlayerScore) GetPlayersScore(name string) int {
+	return 123
+}
+
 func main() {
-	handler := http.HandlerFunc(server.PlayerServer)
-	log.Fatal(http.ListenAndServe(":5000", handler))
+	server := &server.PlayerServer{Store: &InMemoryPlayerScore{}}
+	log.Fatal(http.ListenAndServe(":5000", server))
 }
