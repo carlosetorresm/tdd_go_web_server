@@ -13,6 +13,8 @@ func (i *InMemoryPlayerScore) GetPlayersScore(name string) int {
 	return 123
 }
 
+func (i *InMemoryPlayerScore) RecordWin(name string) {}
+
 func main() {
 	server := &server.PlayerServer{Store: &InMemoryPlayerScore{}}
 	log.Fatal(http.ListenAndServe(":5000", server))
