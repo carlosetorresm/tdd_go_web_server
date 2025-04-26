@@ -11,16 +11,30 @@ import (
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	store := interations.NewInMemoryPlayerStore()
-	server := server.NewPlayerServer(store)
+	serv := server.NewPlayerServer(store)
 	player := "Pepper"
 
-	server.ServeHTTP(httptest.NewRecorder(), newPlayersRequest(http.MethodPost, player))
-	server.ServeHTTP(httptest.NewRecorder(), newPlayersRequest(http.MethodPost, player))
-	server.ServeHTTP(httptest.NewRecorder(), newPlayersRequest(http.MethodPost, player))
+	serv.ServeHTTP(httptest.NewRecorder(), newPlayersRequest(http.MethodPost, player))
+	serv.ServeHTTP(httptest.NewRecorder(), newPlayersRequest(http.MethodPost, player))
+	serv.ServeHTTP(httptest.NewRecorder(), newPlayersRequest(http.MethodPost, player))
 
-	response := httptest.NewRecorder()
-	server.ServeHTTP(response, newPlayersRequest(http.MethodGet, player))
+	t.Run("get score", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		serv.ServeHTTP(response, newPlayersRequest(http.MethodGet, player))
 
-	assertStatus(t, response.Code, http.StatusOK)
-	assertResponseBody(t, response.Body.String(), "3")
+		assertStatus(t, response.Code, http.StatusOK)
+		assertResponseBody(t, response.Body.String(), "3")
+	})
+
+	t.Run("get league", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		serv.ServeHTTP(response, newLeagueRequest())
+		assertStatus(t, response.Code, http.StatusOK)
+
+		got := getLeagueFromResponse(t, response.Body)
+		want := []server.Player{
+			{"Pepper", 3},
+		}
+		assertLeague(t, got, want)
+	})
 }

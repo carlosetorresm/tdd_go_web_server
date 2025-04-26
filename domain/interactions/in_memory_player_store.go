@@ -25,7 +25,9 @@ func (i *InMemoryPlayerStore) RecordWin(name string) {
 	i.store[name]++
 }
 
-func (i *InMemoryPlayerStore) GetLeague() []server.Player {
-	//TODO implement
-	return nil
+func (i *InMemoryPlayerStore) GetLeague() (league []server.Player) {
+	for name, wins := range i.store {
+		league = append(league, server.Player{Name: name, Wins: wins})
+	}
+	return
 }
