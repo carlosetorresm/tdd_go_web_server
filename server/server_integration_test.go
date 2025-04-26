@@ -14,12 +14,12 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	server := server.NewPlayerServer(store)
 	player := "Pepper"
 
-	server.ServeHTTP(httptest.NewRecorder(), newRequest(http.MethodPost, player))
-	server.ServeHTTP(httptest.NewRecorder(), newRequest(http.MethodPost, player))
-	server.ServeHTTP(httptest.NewRecorder(), newRequest(http.MethodPost, player))
+	server.ServeHTTP(httptest.NewRecorder(), newPlayersRequest(http.MethodPost, player))
+	server.ServeHTTP(httptest.NewRecorder(), newPlayersRequest(http.MethodPost, player))
+	server.ServeHTTP(httptest.NewRecorder(), newPlayersRequest(http.MethodPost, player))
 
 	response := httptest.NewRecorder()
-	server.ServeHTTP(response, newRequest(http.MethodGet, player))
+	server.ServeHTTP(response, newPlayersRequest(http.MethodGet, player))
 
 	assertStatus(t, response.Code, http.StatusOK)
 	assertResponseBody(t, response.Body.String(), "3")
