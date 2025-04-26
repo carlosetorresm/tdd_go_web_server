@@ -10,6 +10,6 @@ import (
 
 func main() {
 	store := interactions.NewInMemoryPlayerStore()
-	server := &server.PlayerServer{Store: store}
+	server := server.NewPlayerServer(store)
 	log.Fatal(http.ListenAndServe(":5000", server))
 }
