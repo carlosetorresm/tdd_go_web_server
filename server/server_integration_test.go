@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	interations "github.com/carlosetorresm/tdd_go_web_server/domain/interactions"
+	league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
 	"github.com/carlosetorresm/tdd_go_web_server/server"
 )
 
@@ -32,7 +33,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 		assertStatus(t, response.Code, http.StatusOK)
 
 		got := getLeagueFromResponse(t, response.Body)
-		want := []server.Player{
+		want := []league.Player{
 			{"Pepper", 3},
 		}
 		assertLeague(t, got, want)

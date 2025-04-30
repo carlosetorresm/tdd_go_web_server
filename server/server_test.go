@@ -9,13 +9,14 @@ import (
 	"reflect"
 	"testing"
 
+	league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
 	"github.com/carlosetorresm/tdd_go_web_server/server"
 )
 
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
-	league   []server.Player
+	league   []league.Player
 }
 
 func (s *StubPlayerStore) GetPlayersScore(name string) int {
@@ -27,7 +28,8 @@ func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
-func (s *StubPlayerStore) GetLeague() []server.Player {
+func (s *StubPlayerStore) GetLeague() []league.Player {
+	// league, _ := league.NewLeague(s.Database)
 	return s.league
 }
 
@@ -109,7 +111,7 @@ func newLeagueRequest() *http.Request {
 func TestLeague(t *testing.T) {
 
 	t.Run("it returns the league table as JSON", func(t *testing.T) {
-		wantedLeague := []server.Player{
+		wantedLeague := []league.Player{
 			{"Cleo", 32},
 			{"Chris", 20},
 			{"Tiest", 14},
@@ -137,7 +139,7 @@ func assertionContentType(t *testing.T, response *httptest.ResponseRecorder, wan
 	}
 }
 
-func getLeagueFromResponse(t testing.TB, body io.Reader) (league []server.Player) {
+func getLeagueFromResponse(t testing.TB, body io.Reader) (league []league.Player) {
 	t.Helper()
 	err := json.NewDecoder(body).Decode(&league)
 
@@ -147,7 +149,7 @@ func getLeagueFromResponse(t testing.TB, body io.Reader) (league []server.Player
 	return
 }
 
-func assertLeague(t testing.TB, got, want []server.Player) {
+func assertLeague(t testing.TB, got, want []league.Player) {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v want %v", got, want)

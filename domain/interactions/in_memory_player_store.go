@@ -3,7 +3,7 @@ package interations
 import (
 	"sync"
 
-	"github.com/carlosetorresm/tdd_go_web_server/server"
+	league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
 )
 
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
@@ -25,9 +25,10 @@ func (i *InMemoryPlayerStore) RecordWin(name string) {
 	i.store[name]++
 }
 
-func (i *InMemoryPlayerStore) GetLeague() (league []server.Player) {
+func (i *InMemoryPlayerStore) GetLeague() (lPlayers []league.Player) {
 	for name, wins := range i.store {
-		league = append(league, server.Player{Name: name, Wins: wins})
+		newPlayer := league.Player{Name: name, Wins: wins}
+		lPlayers = append(lPlayers, newPlayer)
 	}
 	return
 }

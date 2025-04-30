@@ -5,17 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
 )
 
 type PlayerStore interface {
 	GetPlayersScore(name string) int
 	RecordWin(name string)
-	GetLeague() []Player
-}
-
-type Player struct {
-	Name string
-	Wins int
+	GetLeague() []league.Player
 }
 
 type PlayerServer struct {
