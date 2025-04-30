@@ -10,11 +10,11 @@ import (
 )
 
 func TestFileSystemStore(t *testing.T) {
-	t.Run("league form reader", func(t *testing.T) {
-		database := strings.NewReader(`[
+	database := strings.NewReader(`[
 	{"Name": "Cleo", "Wins":10},
 	{"Name": "Chris", "Wins":33}]`)
 
+	t.Run("league form reader", func(t *testing.T) {
 		store := filesystem.FileSystemPlayerStore{database}
 		got := store.GetLeague()
 
@@ -28,6 +28,20 @@ func TestFileSystemStore(t *testing.T) {
 		assertLeague(t, got, want)
 	})
 
+	t.Run("Get player score", func(t *testing.T) {
+		store := filesystem.FileSystemPlayerStore{database}
+
+		got := store.GetPlayerScore("Chris")
+		want := 33
+		assertScoreEquals(t, got, want)
+	})
+
+}
+
+func assertScoreEquals(t *testing.T, got int, want int) {
+	if got != want {
+		t.Errorf("got %d want %d", got, want)
+	}
 }
 
 func assertLeague(t testing.TB, got, want []league.Player) {
