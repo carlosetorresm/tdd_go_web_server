@@ -16,7 +16,7 @@ import (
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
-	league   []league.Player
+	lPlayers []league.Player
 }
 
 func (s *StubPlayerStore) GetPlayersScore(name string) int {
@@ -29,8 +29,7 @@ func (s *StubPlayerStore) RecordWin(name string) {
 }
 
 func (s *StubPlayerStore) GetLeague() []league.Player {
-	// league, _ := league.NewLeague(s.Database)
-	return s.league
+	return s.lPlayers
 }
 
 func newPlayersRequest(method string, name string) *http.Request {
@@ -112,9 +111,9 @@ func TestLeague(t *testing.T) {
 
 	t.Run("it returns the league table as JSON", func(t *testing.T) {
 		wantedLeague := []league.Player{
-			{"Cleo", 32},
-			{"Chris", 20},
-			{"Tiest", 14},
+			{Name: "Cleo", Wins: 32},
+			{Name: "Chris", Wins: 20},
+			{Name: "Tiest", Wins: 14},
 		}
 
 		store := StubPlayerStore{nil, nil, wantedLeague}

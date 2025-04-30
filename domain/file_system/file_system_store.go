@@ -1,18 +1,17 @@
 package filesystem
 
 import (
-	"encoding/json"
 	"io"
 
 	league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
 )
 
 type FileSystemPlayerStore struct {
-	Database io.Reader
+	Database io.ReadSeeker
 }
 
 func (f *FileSystemPlayerStore) GetLeague() []league.Player {
-	var lPlayers []league.Player
-	json.NewDecoder(f.Database).Decode(&lPlayers)
+	f.Database.Seek(0, io.SeekStart)
+	lPlayers, _ := league.NewLeague(f.Database)
 	return lPlayers
 }
