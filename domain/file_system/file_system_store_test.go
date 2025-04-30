@@ -33,16 +33,26 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("Get player score", func(t *testing.T) {
-		got := store.GetPlayerScore("Chris")
+		got := store.GetPlayersScore("Chris")
 		want := 33
 		assertScoreEquals(t, got, want)
 	})
 
 	t.Run("store wins for existing players", func(t *testing.T) {
-		store.RecordWin("Chris")
+		existingPlayer := "Chris"
+		store.RecordWin(existingPlayer)
 
-		got := store.GetPlayerScore("Chris")
+		got := store.GetPlayersScore(existingPlayer)
 		want := 34
+		assertScoreEquals(t, got, want)
+	})
+
+	t.Run("store wins for new players", func(t *testing.T) {
+		newPlayer := "Pepper"
+		store.RecordWin(newPlayer)
+
+		got := store.GetPlayersScore(newPlayer)
+		want := 1
 		assertScoreEquals(t, got, want)
 	})
 

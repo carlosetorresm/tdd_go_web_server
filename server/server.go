@@ -12,7 +12,7 @@ import (
 type PlayerStore interface {
 	GetPlayersScore(name string) int
 	RecordWin(name string)
-	GetLeague() []league.Player
+	GetLeague() league.League
 }
 
 type PlayerServer struct {
