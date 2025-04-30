@@ -1,8 +1,9 @@
 package filesystem_test
 
 import (
+	"io"
+	"os"
 	"reflect"
-	"strings"
 	"testing"
 
 	filesystem "github.com/carlosetorresm/tdd_go_web_server/domain/file_system"
@@ -10,12 +11,14 @@ import (
 )
 
 func TestFileSystemStore(t *testing.T) {
-	database := strings.NewReader(`[
+	database, cleanDatabase := createTempFile(t, `[
 	{"Name": "Cleo", "Wins":10},
 	{"Name": "Chris", "Wins":33}]`)
+	defer cleanDatabase()
+
+	store := filesystem.FileSystemPlayerStore{database}
 
 	t.Run("league form reader", func(t *testing.T) {
-		store := filesystem.FileSystemPlayerStore{database}
 		got := store.GetLeague()
 
 		want := []league.Player{
@@ -24,18 +27,41 @@ func TestFileSystemStore(t *testing.T) {
 		}
 		assertLeague(t, got, want)
 
+		// read again
 		got = store.GetLeague()
 		assertLeague(t, got, want)
 	})
 
 	t.Run("Get player score", func(t *testing.T) {
-		store := filesystem.FileSystemPlayerStore{database}
-
 		got := store.GetPlayerScore("Chris")
 		want := 33
 		assertScoreEquals(t, got, want)
 	})
 
+	t.Run("store wins for existing players", func(t *testing.T) {
+		store.RecordWin("Chris")
+
+		got := store.GetPlayerScore("Chris")
+		want := 34
+		assertScoreEquals(t, got, want)
+	})
+
+}
+
+func createTempFile(t testing.TB, initialData string) (io.ReadWriteSeeker, func()) {
+	t.Helper()
+
+	tmpFile, err := os.CreateTemp("", "db")
+
+	if err != nil {
+		t.Fatalf("could not create temp file %v", err)
+	}
+	tmpFile.Write([]byte(initialData))
+	removeFile := func() {
+		tmpFile.Close()
+		os.Remove(tmpFile.Name())
+	}
+	return tmpFile, removeFile
 }
 
 func assertScoreEquals(t *testing.T, got int, want int) {
