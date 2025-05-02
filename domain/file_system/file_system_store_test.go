@@ -16,7 +16,7 @@ func TestFileSystemStore(t *testing.T) {
 	{"Name": "Chris", "Wins":33}]`)
 	defer cleanDatabase()
 
-	store := filesystem.FileSystemPlayerStore{database}
+	store := filesystem.NewFileSystemPlayerStore(database)
 
 	t.Run("league form reader", func(t *testing.T) {
 		got := store.GetLeague()
