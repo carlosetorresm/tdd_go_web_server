@@ -110,7 +110,7 @@ func newLeagueRequest() *http.Request {
 func TestLeague(t *testing.T) {
 
 	t.Run("it returns the league table as JSON", func(t *testing.T) {
-		wantedLeague := []league.Player{
+		wantedLeague := league.League{
 			{Name: "Cleo", Wins: 32},
 			{Name: "Chris", Wins: 20},
 			{Name: "Tiest", Wins: 14},
@@ -138,7 +138,7 @@ func assertionContentType(t *testing.T, response *httptest.ResponseRecorder, wan
 	}
 }
 
-func getLeagueFromResponse(t testing.TB, body io.Reader) (league []league.Player) {
+func getLeagueFromResponse(t testing.TB, body io.Reader) (league league.League) {
 	t.Helper()
 	err := json.NewDecoder(body).Decode(&league)
 
@@ -148,7 +148,7 @@ func getLeagueFromResponse(t testing.TB, body io.Reader) (league []league.Player
 	return
 }
 
-func assertLeague(t testing.TB, got, want []league.Player) {
+func assertLeague(t testing.TB, got, want league.League) {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v want %v", got, want)

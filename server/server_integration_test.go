@@ -1,7 +1,6 @@
 package server_test
 
 import (
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,10 +12,11 @@ import (
 )
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	database, cleanDatabase := createTempFile(t, "")
+	database, cleanDatabase := createTempFile(t, "[]")
 	defer cleanDatabase()
 
-	store := &filesystem.FileSystemPlayerStore{Database: database}
+	store, err := filesystem.NewFileSystemPlayerStore(database)
+	assertNoError(t, err)
 	serv := server.NewPlayerServer(store)
 	player := "Pepper"
 
@@ -38,14 +38,21 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 		assertStatus(t, response.Code, http.StatusOK)
 
 		got := getLeagueFromResponse(t, response.Body)
-		want := []league.Player{
+		want := league.League{
 			{Name: "Pepper", Wins: 3},
 		}
 		assertLeague(t, got, want)
 	})
 }
 
-func createTempFile(t testing.TB, initialData string) (io.ReadWriteSeeker, func()) {
+func assertNoError(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("didn' expect an erro but got one, %v", err)
+	}
+}
+
+func createTempFile(t testing.TB, initialData string) (*os.File, func()) {
 	t.Helper()
 
 	tmpFile, err := os.CreateTemp("", "db")

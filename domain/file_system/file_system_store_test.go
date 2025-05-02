@@ -1,7 +1,6 @@
 package filesystem_test
 
 import (
-	"io"
 	"os"
 	"reflect"
 	"testing"
@@ -16,12 +15,21 @@ func TestFileSystemStore(t *testing.T) {
 	{"Name": "Chris", "Wins":33}]`)
 	defer cleanDatabase()
 
-	store := filesystem.NewFileSystemPlayerStore(database)
+	store, err := filesystem.NewFileSystemPlayerStore(database)
+	assertNoError(t, err)
+
+	t.Run("works with an empty file", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, "")
+		defer cleanDatabase()
+
+		_, err := filesystem.NewFileSystemPlayerStore(database)
+		assertNoError(t, err)
+	})
 
 	t.Run("league form reader", func(t *testing.T) {
 		got := store.GetLeague()
 
-		want := []league.Player{
+		want := league.League{
 			{Name: "Cleo", Wins: 10},
 			{Name: "Chris", Wins: 33},
 		}
@@ -58,7 +66,7 @@ func TestFileSystemStore(t *testing.T) {
 
 }
 
-func createTempFile(t testing.TB, initialData string) (io.ReadWriteSeeker, func()) {
+func createTempFile(t testing.TB, initialData string) (*os.File, func()) {
 	t.Helper()
 
 	tmpFile, err := os.CreateTemp("", "db")
@@ -80,7 +88,14 @@ func assertScoreEquals(t *testing.T, got int, want int) {
 	}
 }
 
-func assertLeague(t testing.TB, got, want []league.Player) {
+func assertNoError(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("didn't expect an error but got one, %v", err)
+	}
+}
+
+func assertLeague(t testing.TB, got, want league.League) {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v want %v", got, want)
