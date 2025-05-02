@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/carlosetorresm/tdd_go_web_server/cli"
@@ -27,12 +28,21 @@ func (s *StubPlayerStore) GetLeague() league.League {
 }
 
 func TestCli(t *testing.T) {
-	playerStore := &StubPlayerStore{}
-	cli := &cli.CLI{playerStore}
+	in := strings.NewReader("Chris wins\n")
+	store := &StubPlayerStore{}
+
+	cli := &cli.CLI{store, in}
 	cli.PlayPoker()
 
-	if len(playerStore.winCalls) != 1 {
-		t.Fatal("expected a win call but didn't get any")
-	}
+	assertPlayerWin(t, store, "Chris")
+}
 
+func assertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
+	t.Helper()
+	if len(store.winCalls) != 1 {
+		t.Errorf("got %d calls to RecordWin want %d", len(store.winCalls), 1)
+	}
+	if store.winCalls[0] != winner {
+		t.Errorf("did not store correct winner got %q want %q", store.winCalls[0], winner)
+	}
 }

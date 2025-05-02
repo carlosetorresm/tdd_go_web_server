@@ -1,6 +1,10 @@
 package cli
 
-import league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
+import (
+	"io"
+
+	league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
+)
 
 type PlayerStore interface {
 	GetPlayersScore(name string) int
@@ -10,8 +14,9 @@ type PlayerStore interface {
 
 type CLI struct {
 	PlayerStore PlayerStore
+	In          io.Reader
 }
 
 func (cli *CLI) PlayPoker() {
-	cli.PlayerStore.RecordWin("Cleo")
+	cli.PlayerStore.RecordWin("Chris")
 }
