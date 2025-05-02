@@ -26,12 +26,12 @@ func TestFileSystemStore(t *testing.T) {
 		assertNoError(t, err)
 	})
 
-	t.Run("league form reader", func(t *testing.T) {
+	t.Run("league sorted", func(t *testing.T) {
 		got := store.GetLeague()
 
 		want := league.League{
-			{Name: "Cleo", Wins: 10},
 			{Name: "Chris", Wins: 33},
+			{Name: "Cleo", Wins: 10},
 		}
 		assertLeague(t, got, want)
 
