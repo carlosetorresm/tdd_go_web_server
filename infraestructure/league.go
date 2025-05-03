@@ -7,8 +7,15 @@ import (
 )
 
 type Player struct {
-	Name string
-	Wins int
+	Name string `json:"name"`
+	Wins int    `json:"wins"`
+}
+
+func NewPlayer(name string, wins int) *Player {
+	player := new(Player)
+	player.Name = name
+	player.Wins = wins
+	return player
 }
 
 type League []Player

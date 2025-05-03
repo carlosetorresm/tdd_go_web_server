@@ -5,44 +5,27 @@ import (
 	"testing"
 
 	"github.com/carlosetorresm/tdd_go_web_server/cli"
-	league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
+	test "github.com/carlosetorresm/tdd_go_web_server/testing"
 )
 
-type StubPlayerStore struct {
-	scores   map[string]int
-	winCalls []string
-	lPlayers league.League
-}
-
-func (s *StubPlayerStore) GetPlayersScore(name string) int {
-	score := s.scores[name]
-	return score
-}
-
-func (s *StubPlayerStore) RecordWin(name string) {
-	s.winCalls = append(s.winCalls, name)
-}
-
-func (s *StubPlayerStore) GetLeague() league.League {
-	return s.lPlayers
-}
-
 func TestCli(t *testing.T) {
-	in := strings.NewReader("Chris wins\n")
-	store := &StubPlayerStore{}
+	t.Run("record chris win from user input", func(t *testing.T) {
+		in := strings.NewReader("Chris wins\n")
+		store := &test.StubPlayerStore{}
 
-	cli := &cli.CLI{store, in}
-	cli.PlayPoker()
+		cli := cli.NewCLI(store, in)
+		cli.PlayPoker()
 
-	assertPlayerWin(t, store, "Chris")
-}
+		test.AssertPlayerWin(t, store, "Chris")
+	})
 
-func assertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
-	t.Helper()
-	if len(store.winCalls) != 1 {
-		t.Errorf("got %d calls to RecordWin want %d", len(store.winCalls), 1)
-	}
-	if store.winCalls[0] != winner {
-		t.Errorf("did not store correct winner got %q want %q", store.winCalls[0], winner)
-	}
+	t.Run("record cleo win from user input", func(t *testing.T) {
+		in := strings.NewReader("Cleo wins\n")
+		store := &test.StubPlayerStore{}
+
+		cli := cli.NewCLI(store, in)
+		cli.PlayPoker()
+
+		test.AssertPlayerWin(t, store, "Cleo")
+	})
 }

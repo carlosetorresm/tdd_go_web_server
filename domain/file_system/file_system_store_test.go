@@ -1,49 +1,48 @@
 package filesystem_test
 
 import (
-	"os"
-	"reflect"
 	"testing"
 
 	filesystem "github.com/carlosetorresm/tdd_go_web_server/domain/file_system"
 	league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
+	test "github.com/carlosetorresm/tdd_go_web_server/testing"
 )
 
 func TestFileSystemStore(t *testing.T) {
-	database, cleanDatabase := createTempFile(t, `[
+	database, cleanDatabase := test.CreateTempFile(t, `[
 	{"Name": "Cleo", "Wins":10},
 	{"Name": "Chris", "Wins":33}]`)
 	defer cleanDatabase()
 
 	store, err := filesystem.NewFileSystemPlayerStore(database)
-	assertNoError(t, err)
+	test.AssertNoError(t, err)
 
 	t.Run("works with an empty file", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, "")
+		database, cleanDatabase := test.CreateTempFile(t, "")
 		defer cleanDatabase()
 
 		_, err := filesystem.NewFileSystemPlayerStore(database)
-		assertNoError(t, err)
+		test.AssertNoError(t, err)
 	})
 
 	t.Run("league sorted", func(t *testing.T) {
 		got := store.GetLeague()
 
 		want := league.League{
-			{Name: "Chris", Wins: 33},
-			{Name: "Cleo", Wins: 10},
+			*league.NewPlayer("Chris", 33),
+			*league.NewPlayer("Cleo", 10),
 		}
-		assertLeague(t, got, want)
+		test.AssertLeague(t, got, want)
 
 		// read again
 		got = store.GetLeague()
-		assertLeague(t, got, want)
+		test.AssertLeague(t, got, want)
 	})
 
 	t.Run("Get player score", func(t *testing.T) {
 		got := store.GetPlayersScore("Chris")
 		want := 33
-		assertScoreEquals(t, got, want)
+		test.AssertScoreEquals(t, got, want)
 	})
 
 	t.Run("store wins for existing players", func(t *testing.T) {
@@ -52,7 +51,7 @@ func TestFileSystemStore(t *testing.T) {
 
 		got := store.GetPlayersScore(existingPlayer)
 		want := 34
-		assertScoreEquals(t, got, want)
+		test.AssertScoreEquals(t, got, want)
 	})
 
 	t.Run("store wins for new players", func(t *testing.T) {
@@ -61,43 +60,7 @@ func TestFileSystemStore(t *testing.T) {
 
 		got := store.GetPlayersScore(newPlayer)
 		want := 1
-		assertScoreEquals(t, got, want)
+		test.AssertScoreEquals(t, got, want)
 	})
 
-}
-
-func createTempFile(t testing.TB, initialData string) (*os.File, func()) {
-	t.Helper()
-
-	tmpFile, err := os.CreateTemp("", "db")
-
-	if err != nil {
-		t.Fatalf("could not create temp file %v", err)
-	}
-	tmpFile.Write([]byte(initialData))
-	removeFile := func() {
-		tmpFile.Close()
-		os.Remove(tmpFile.Name())
-	}
-	return tmpFile, removeFile
-}
-
-func assertScoreEquals(t *testing.T, got int, want int) {
-	if got != want {
-		t.Errorf("got %d want %d", got, want)
-	}
-}
-
-func assertNoError(t *testing.T, err error) {
-	t.Helper()
-	if err != nil {
-		t.Fatalf("didn't expect an error but got one, %v", err)
-	}
-}
-
-func assertLeague(t testing.TB, got, want league.League) {
-	t.Helper()
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %v want %v", got, want)
-	}
 }

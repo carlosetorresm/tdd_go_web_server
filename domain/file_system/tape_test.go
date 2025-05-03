@@ -5,13 +5,14 @@ import (
 	"testing"
 
 	filesystem "github.com/carlosetorresm/tdd_go_web_server/domain/file_system"
+	test "github.com/carlosetorresm/tdd_go_web_server/testing"
 )
 
 func TestTape_Write(t *testing.T) {
-	file, clean := createTempFile(t, "12345")
+	file, clean := test.CreateTempFile(t, "12345")
 	defer clean()
 
-	tape := &filesystem.Tape{file}
+	tape := filesystem.NewTape(file)
 
 	tape.Write([]byte("abc"))
 
