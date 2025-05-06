@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"testing"
@@ -10,37 +11,43 @@ import (
 	test "github.com/carlosetorresm/tdd_go_web_server/testing"
 )
 
+var dummystore = &test.StubPlayerStore{}
+var dummyblindAlerter = &test.SpyBlindAlerter{}
+var dummyStdIn = &bytes.Buffer{}
+var dummyStdOut = &bytes.Buffer{}
+
 func TestCli(t *testing.T) {
-	t.Run("record chris win from user input", func(t *testing.T) {
-		in := strings.NewReader("Chris wins\n")
-		store := &test.StubPlayerStore{}
-		var dummySpyAlerter = &test.SpyBlindAlerter{}
-
-		cli := cli.NewCLI(store, in, dummySpyAlerter)
-		cli.PlayPoker()
-
-		test.AssertPlayerWin(t, store, "Chris")
-	})
-
-	t.Run("record cleo win from user input", func(t *testing.T) {
-		in := strings.NewReader("Cleo wins\n")
-		store := &test.StubPlayerStore{}
-		var dummySpyAlerter = &test.SpyBlindAlerter{}
-
-		cli := cli.NewCLI(store, in, dummySpyAlerter)
-		cli.PlayPoker()
-
-		test.AssertPlayerWin(t, store, "Cleo")
-	})
-
-	t.Run("it schedules printing of blind values", func(t *testing.T) {
-		in := strings.NewReader("Chris wins\n")
-		store := &test.StubPlayerStore{}
+	t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
+		stdout := &bytes.Buffer{}
+		in := strings.NewReader("7\n")
 		blindAlerter := &test.SpyBlindAlerter{}
+		game := cli.NewGame(blindAlerter, dummystore)
 
-		cli := cli.NewCLI(store, in, blindAlerter)
-		cli.PlayPoker()
+		cli.NewCLI(in, stdout, game).PlayPoker()
 
+		got := stdout.String()
+		want := cli.PlayerPrompt
+
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+
+		cases := []test.ScheduledAlert{
+			{At: 0 * time.Second, Amount: 100},
+			{At: 12 * time.Minute, Amount: 200},
+			{At: 24 * time.Minute, Amount: 300},
+			{At: 36 * time.Minute, Amount: 400},
+		}
+
+		checkSchedulingCases(t, cases, blindAlerter)
+
+	})
+
+	t.Run("schedules alerts on game start for 5 players", func(t *testing.T) {
+		blindAlerter := &test.SpyBlindAlerter{}
+		game := cli.NewGame(blindAlerter, dummystore)
+
+		game.Start(5)
 		cases := []test.ScheduledAlert{
 			{At: 0 * time.Second, Amount: 100},
 			{At: 10 * time.Minute, Amount: 200},
@@ -54,18 +61,48 @@ func TestCli(t *testing.T) {
 			{At: 90 * time.Minute, Amount: 4000},
 			{At: 100 * time.Minute, Amount: 8000},
 		}
-
-		for i, want := range cases {
-			t.Run(fmt.Sprint(want), func(t *testing.T) {
-				if len(blindAlerter.Alerts) <= 1 {
-					t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.Alerts)
-				}
-				got := blindAlerter.Alerts[i]
-				assertScheduledAlert(t, got, want)
-
-			})
-		}
+		checkSchedulingCases(t, cases, blindAlerter)
 	})
+
+	t.Run("schedules alerts on game start for 7 players", func(t *testing.T) {
+		blindAlerter := &test.SpyBlindAlerter{}
+		game := cli.NewGame(blindAlerter, dummystore)
+
+		game.Start(7)
+
+		cases := []test.ScheduledAlert{
+			{At: 0 * time.Second, Amount: 100},
+			{At: 12 * time.Minute, Amount: 200},
+			{At: 24 * time.Minute, Amount: 300},
+			{At: 36 * time.Minute, Amount: 400},
+		}
+
+		checkSchedulingCases(t, cases, blindAlerter)
+	})
+
+}
+
+func TestGame_Finish(t *testing.T) {
+	store := &test.StubPlayerStore{}
+	game := cli.NewGame(dummyblindAlerter, store)
+	winner := "Ruth"
+
+	game.Finish(winner)
+	test.AssertPlayerWin(t, store, winner)
+}
+
+func checkSchedulingCases(t *testing.T, cases []test.ScheduledAlert, blindAlerter *test.SpyBlindAlerter) {
+	t.Helper()
+	for i, want := range cases {
+		t.Run(fmt.Sprint(want), func(t *testing.T) {
+			if len(blindAlerter.Alerts) <= i {
+				t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.Alerts)
+			}
+
+			got := blindAlerter.Alerts[i]
+			assertScheduledAlert(t, got, want)
+		})
+	}
 }
 
 func assertScheduledAlert(t testing.TB, got, want test.ScheduledAlert) {
