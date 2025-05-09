@@ -126,25 +126,29 @@ func TestGame(t *testing.T) {
 	})
 
 	t.Run("when we get a message over a websocket it is a winner of a game", func(t *testing.T) {
-		store := &test.StubPlayerStore{}
 		winner := "Ruth"
-		server := httptest.NewServer(mustMakePlayerServer(t, store, dummyGame))
-		defer server.Close()
 
+		game := &test.GameSpy{}
+		store := &test.StubPlayerStore{}
+		server := httptest.NewServer(mustMakePlayerServer(t, store, game))
 		wsUrl := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
-
 		ws := mustDialWS(t, wsUrl)
+
+		defer server.Close()
 		defer ws.Close()
 
+		writeWSMessage(t, ws, "3")
 		writeWSMessage(t, ws, winner)
-		time.Sleep(10 * time.Millisecond)
-		test.AssertPlayerWin(t, store, winner)
+
+		assertFinishCalledWith(t, game, winner)
 	})
 
-	t.Run("start game with 3 players and finish game with 'Ruth' as winner", func(t *testing.T) {
-		game := &test.GameSpy{}
-		dummyStore := &test.StubPlayerStore{}
+	t.Run("start game with 3 players, send some blind alerts down WS and finish game with 'Ruth' as winner", func(t *testing.T) {
+		wantedBlindAlert := "Blind is 100"
 		winner := "Ruth"
+
+		game := &test.GameSpy{BlindAlert: []byte(wantedBlindAlert)}
+		dummyStore := &test.StubPlayerStore{}
 		server := httptest.NewServer(mustMakePlayerServer(t, dummyStore, game))
 		ws := mustDialWS(t, "ws"+strings.TrimPrefix(server.URL, "http")+"/ws")
 
@@ -154,10 +158,27 @@ func TestGame(t *testing.T) {
 		writeWSMessage(t, ws, "3")
 		writeWSMessage(t, ws, winner)
 
-		time.Sleep(10 * time.Millisecond)
 		assertGameStartedWith(t, game, 3)
 		assertFinishCalledWith(t, game, winner)
+
+		within(t, 10*time.Millisecond, func() { assertWebsocketGotMsg(t, ws, wantedBlindAlert) })
 	})
+}
+
+func within(t testing.TB, d time.Duration, assert func()) {
+	t.Helper()
+
+	done := make(chan struct{}, 1)
+	go func() {
+		assert()
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-time.After(d):
+		t.Error("timed out")
+	case <-done:
+	}
 }
 
 func writeWSMessage(t *testing.T, ws *websocket.Conn, message string) {
@@ -202,14 +223,40 @@ func getLeagueFromResponse(t testing.TB, body io.Reader) (league league.League) 
 
 func assertGameStartedWith(t *testing.T, game *test.GameSpy, numberOfPlayers int) {
 	t.Helper()
-	if game.StartedWith != numberOfPlayers {
+
+	passed := retryUntil(500*time.Millisecond, func() bool {
+		return game.StartedWith == numberOfPlayers
+	})
+
+	if !passed {
 		t.Errorf("wanted Start called with %d but got %d", numberOfPlayers, game.StartedWith)
 	}
 }
 
 func assertFinishCalledWith(t *testing.T, game *test.GameSpy, winner string) {
 	t.Helper()
-	if game.FinishedWith != winner {
+	passed := retryUntil(500*time.Millisecond, func() bool {
+		return game.FinishedWith == winner
+	})
+
+	if !passed {
 		t.Errorf("expected finish called with %q but got %q", winner, game.FinishedWith)
+	}
+}
+
+func retryUntil(d time.Duration, f func() bool) bool {
+	deadline := time.Now().Add(d)
+	for time.Now().Before(deadline) {
+		if f() {
+			return true
+		}
+	}
+	return false
+}
+
+func assertWebsocketGotMsg(t *testing.T, ws *websocket.Conn, want string) {
+	_, msg, _ := ws.ReadMessage()
+	if string(msg) != want {
+		t.Errorf(`got "%s", want "%s"`, string(msg), want)
 	}
 }

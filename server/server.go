@@ -74,12 +74,12 @@ func (p *PlayerServer) playGame(w http.ResponseWriter, r *http.Request) {
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 	ws := newPlayerServerWS(w, r)
 
-	_, numberOfPlayersMsg, _ := ws.ReadMessage()
+	numberOfPlayersMsg := ws.WaitForMsg()
 	numberOfPlayers, _ := strconv.Atoi(string(numberOfPlayersMsg))
-	p.game.Start(numberOfPlayers, io.Discard)
+	p.game.Start(numberOfPlayers, ws)
 
-	_, winnerMsg, _ := ws.ReadMessage()
-	p.store.RecordWin(string(winnerMsg))
+	winner := ws.WaitForMsg()
+	p.game.Finish(winner)
 }
 
 func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
