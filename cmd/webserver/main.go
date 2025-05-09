@@ -19,7 +19,13 @@ func main() {
 	}
 	defer close()
 
-	server := server.NewPlayerServer(store)
+	game := server.NewGame(server.BlindAlerterFunc(server.Alerter), store)
+
+	server, err := server.NewPlayerServer(store, game)
+	if err != nil {
+		log.Fatalf("problem creating player server %v", err)
+	}
+
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), server); err != nil {
 		log.Fatalf("could not listen on port %d %v", port, err)
 	}

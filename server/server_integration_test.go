@@ -17,7 +17,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 
 	store, err := filesystem.NewFileSystemPlayerStore(database)
 	test.AssertNoError(t, err)
-	serv := server.NewPlayerServer(store)
+	serv, _ := server.NewPlayerServer(store, dummyGame)
 	player := "Pepper"
 
 	serv.ServeHTTP(httptest.NewRecorder(), newPlayersRequest(http.MethodPost, player))

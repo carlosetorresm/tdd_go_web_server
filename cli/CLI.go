@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -13,19 +12,9 @@ import (
 	league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
 )
 
-type BlindAlerter interface {
-	ScheduleAlertAt(duration time.Duration, amount int)
-}
-
-type BlindAlerterFunc func(duration time.Duration, amount int)
-
-func (a BlindAlerterFunc) ScheduleAlertAt(duration time.Duration, amount int) {
-	a(duration, amount)
-}
-
-func StdOutAlerter(duration time.Duration, amount int) {
+func StdOutAlerter(duration time.Duration, amount int, to io.Writer) {
 	time.AfterFunc(duration, func() {
-		fmt.Fprintf(os.Stdout, "Blind is now %d\n", amount)
+		fmt.Fprintf(to, "Blind is now %d\n", amount)
 	})
 }
 
@@ -60,7 +49,7 @@ func (cli *CLI) PlayPoker() {
 		return
 	}
 
-	cli.game.Start(numberOfPlayers)
+	cli.game.Start(numberOfPlayers, cli.out)
 
 	winnerInput := cli.readLine()
 	winner, err := extractWinner(winnerInput)

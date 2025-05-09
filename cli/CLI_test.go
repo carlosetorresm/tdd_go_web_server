@@ -2,7 +2,6 @@ package cli_test
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -10,9 +9,6 @@ import (
 	test "github.com/carlosetorresm/tdd_go_web_server/testing"
 )
 
-var dummystore = &test.StubPlayerStore{}
-var dummyblindAlerter = &test.SpyBlindAlerter{}
-var dummyStdIn = &bytes.Buffer{}
 var dummyStdOut = &bytes.Buffer{}
 
 func userSends(messages ...string) *strings.Reader {
@@ -86,20 +82,6 @@ func assertFinishCalledWith(t *testing.T, game *test.GameSpy, winner string) {
 	t.Helper()
 	if game.FinishedWith != winner {
 		t.Errorf("expected finish called with %q but got %q", winner, game.FinishedWith)
-	}
-}
-
-func checkSchedulingCases(t *testing.T, cases []test.ScheduledAlert, blindAlerter *test.SpyBlindAlerter) {
-	t.Helper()
-	for i, want := range cases {
-		t.Run(fmt.Sprint(want), func(t *testing.T) {
-			if len(blindAlerter.Alerts) <= i {
-				t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.Alerts)
-			}
-
-			got := blindAlerter.Alerts[i]
-			assertScheduledAlert(t, got, want)
-		})
 	}
 }
 
