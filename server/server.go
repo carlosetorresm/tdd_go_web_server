@@ -11,7 +11,6 @@ import (
 	"time"
 
 	league "github.com/carlosetorresm/tdd_go_web_server/infraestructure"
-	"github.com/gorilla/websocket"
 )
 
 type PlayerStore interface {
@@ -73,13 +72,13 @@ func (p *PlayerServer) playGame(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
-	upgrader := websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
-	conn, _ := upgrader.Upgrade(w, r, nil)
-	_, numberOfPlayersMsg, _ := conn.ReadMessage()
+	ws := newPlayerServerWS(w, r)
+
+	_, numberOfPlayersMsg, _ := ws.ReadMessage()
 	numberOfPlayers, _ := strconv.Atoi(string(numberOfPlayersMsg))
 	p.game.Start(numberOfPlayers, io.Discard)
 
-	_, winnerMsg, _ := conn.ReadMessage()
+	_, winnerMsg, _ := ws.ReadMessage()
 	p.store.RecordWin(string(winnerMsg))
 }
 
